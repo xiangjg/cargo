@@ -1,0 +1,157 @@
+apply plugin: 'java'
+apply plugin: 'scala'
+apply plugin: 'eclipse'
+apply plugin: 'application'
+
+group 'com.jone'
+
+ext {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    springVersion = '4.3.14.RELEASE'
+    scalaVersion = '2.11.6'
+    scalaLibVersion = '2.11'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo.springsource.org/libs-snapshot" }
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "https://repo.spring.io/milestone" }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // Spring
+    compile("org.springframework:spring-aop:$springVersion")
+    compile("org.springframework:spring-core:$springVersion")
+    compile("org.springframework:spring-beans:$springVersion")
+    compile("org.springframework:spring-context:$springVersion")
+    compile("org.springframework:spring-jdbc:$springVersion")
+    compile("org.springframework:spring-jms:$springVersion")
+    compile("org.springframework:spring-web:$springVersion")
+
+    // Scala
+    compile("org.scala-lang:scala-library:$scalaVersion")
+    compile("org.scala-lang:scala-reflect:$scalaVersion")
+    compile("org.scala-lang:scala-compiler:$scalaVersion")
+    compile("org.scala-lang.modules:scala-xml_$scalaLibVersion:1.0.6")
+
+    //quill
+    compile "io.getquill:quill-core_$scalaLibVersion:2.4.2"
+    compile "io.getquill:quill-jdbc_$scalaLibVersion:2.4.2"
+    compile "io.getquill:quill-sql_$scalaLibVersion:2.4.2"
+
+    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.38'
+
+    //task
+    compile "com.typesafe.akka:akka-actor_$scalaLibVersion:2.5.6"
+
+    // Jackson
+    compile("com.fasterxml.jackson.module:jackson-module-scala_$scalaLibVersion:2.9.2")
+    //JSON
+    compile ("com.typesafe.play:play-json_$scalaLibVersion:2.6.7")
+    compile ("com.fasterxml.jackson.core:jackson-core:2.8.9")
+    compile ("com.fasterxml.jackson.core:jackson-databind:2.8.9")
+    compile ("com.fasterxml.jackson.core:jackson-annotations:2.8.9")
+
+    // Java EE
+    compile("org.apache.geronimo.specs:geronimo-jms_1.1_spec:1.1")
+    compile("javax.servlet:servlet-api:2.5")
+    compile("javax.inject:javax.inject:1")
+
+    //dubbo zookeeper
+    compile ('com.alibaba:dubbo:2.5.3')
+            {   exclude group: 'org.springframework'
+                exclude group:"log4j", module:"log4j"}
+    compile group: 'com.alibaba', name: 'dubbo-rpc-api', version: '2.6.1'
+    compile group: 'com.101tec', name: 'zkclient', version: '0.3'
+    testCompile group: 'org.apache.zookeeper', name: 'zookeeper', version: '3.4.6', ext: 'pom'
+    testCompile group: 'com.caucho', name: 'hessian', version: '4.0.7'
+    //json rpc
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.10'
+    compile group: 'commons-httpclient', name: 'commons-httpclient', version: '3.1'
+    compile group: 'org.apache.cxf', name: 'cxf-core', version: '3.1.9'
+    compile group: 'org.typelevel', name: 'scala-library', version: '2.11.8'
+    compile group: 'org.mortbay.jetty', name: 'jetty', version: '6.1.26'
+
+    //util
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.2'
+    compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+    //极光推送
+    compile group: 'cn.jpush.api', name: 'jpush-client', version: '3.3.4'
+    compile group: 'cn.jpush.api', name: 'jiguang-common', version: '1.0.8'
+
+    //log
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    compile fileTree(dir: './lib', include: '*.jar')
+
+}
+
+//这里是关键（把java与scala的源代码目录全映射到scala上,
+// 这样gradle compileScala时就能同时编译java与scala的源代码）
+sourceSets {
+    main {
+        scala {
+            srcDirs = ['src/main/scala', 'src/main/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+
+    test {
+        scala {
+            srcDirs = ['src/test/scala', 'src/test/java']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+}
+//可选（项目初始化时,可用gradle cDirs生成scala及java的src目录）
+task "createDirs" << {
+    sourceSets*.scala.srcDirs*.each { it.mkdirs() }
+    sourceSets*.java.srcDirs*.each { it.mkdirs() }
+    sourceSets*.resources.srcDirs*.each { it.mkdirs() }
+}
+//Java compiler settings
+tasks.withType(JavaCompile) {
+    //ignore conjunction warning
+    options.compilerArgs << '-Xlint:-options'
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = ["-feature", "-language:implicitConversions", "-language:reflectiveCalls"]
+    //scalaCompileOptions.useAnt = false
+}
+
+task wrapper(type: Wrapper) {
+    description = 'Generates gradlew[.bat] scripts'
+    gradleVersion = '2.9'
+}
+
+
+jar {
+    baseName = 'cargo'
+    version =  '1.0'
+
+    String classpath = ''
+    configurations.runtime.each {
+        classpath = classpath +" lib/"+ it.name
+    }
+    manifest {
+        attributes 'Main-Class': 'com.jone.StartApplication'
+        attributes 'Class-Path': classpath
+    }
+
+}
+
+task exportJar(type:Copy){
+    from configurations.runtime
+    into ('build/libs/lib')
+}
