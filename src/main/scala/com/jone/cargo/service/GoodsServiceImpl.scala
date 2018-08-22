@@ -1,11 +1,14 @@
 package com.jone.cargo.service
 
+import java.util
+import java.util.Date
+
 import com.alibaba.dubbo.config.annotation.Service
 import com.jone.cargo.api.GoodsService
 import com.jone.cargo.config.DBConfig
 import com.jone.cargo.config.DBConfig.db._
 import com.jone.cargo.db.DBObject
-import com.jone.cargo.entity.GoodsVo
+import com.jone.cargo.entity.{GoodsBaseVo, GoodsVo}
 import org.slf4j.LoggerFactory
 
 @Service
@@ -21,7 +24,7 @@ class GoodsServiceImpl extends GoodsService {
       )
       if (goods.size == 0) {
         DBConfig.db.run(
-          DBObject.goodsBase.insert(liftCaseClass(DBObject.GoodsBase(code)))
+          DBObject.goodsBase.insert(liftCaseClass(DBObject.GoodsBase(code,new Date)))
         )
       }
       ret = true
@@ -40,8 +43,19 @@ class GoodsServiceImpl extends GoodsService {
     )
     val ret = if (goods.size > 0) {
       val g = goods.head
-      new GoodsVo(g.barcode, g.name, g.eName, g.unspsc, g.brand, g._type, g.width, g.height, g.depth, g.originCountry, g.originPlace, g.assemblyCountry, g.barcodeType, g.catena, g.isBasicUnit, g.packageType, g.grossWeight, g.netWeight, g.description, g.keyword, g.pic, g.price, g.licenseNum, g.healthPermitNum, g.netContent, g.company, g.expirationDate)
+      new GoodsVo(g.barcode, g.name, g.eName, g.unspsc, g.brand, g._type, g.width, g.height, g.depth, g.originCountry, g.originPlace, g.assemblyCountry, g.barcodeType, g.catena, g.isBasicUnit, g.packageType, g.grossWeight, g.netWeight, g.description, g.keyword, g.pic, g.price, g.licenseNum, g.healthPermitNum, g.netContent, g.company, g.expirationDate, g.insertDate)
     } else Nil
+    ret
+  }
+
+  override def queryAllGoods(): Any = {
+    val ret = new util.ArrayList[GoodsBaseVo]()
+    DBConfig.db.run(
+      DBObject.goods.sortBy(_.insertDate)(Ord.desc)
+    ).foreach((g:DBObject.Goods) => {
+      val goodsVo = new GoodsBaseVo(g.barcode, g.name, g.insertDate)
+      ret.add(goodsVo)
+    })
     ret
   }
 }

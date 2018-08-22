@@ -6,5 +6,5 @@ trait GoodsService {
 
   def queryByCode(code:String):Any
 
-
+  def queryAllGoods():Any
 }

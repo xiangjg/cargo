@@ -47,7 +47,10 @@ object GoodsUtil {
           val netContent = jsonObject.getString("netcontent")
           val company = jsonObject.getString("company")
           val expirationDate = jsonObject.getString("expirationdate")
-          val goods = DBObject.Goods(code,name, eName, unspsc, brand, _type, width, height, depth, originCountry, originPlace, assemblyCountry, barcodeType, catena, isBasicUnit, packageType, grossWeight, netWeight, description, keyword, pic, price, licenseNum, healthPermitNum, netContent, company, expirationDate)
+          val oldGoods = DBConfig.db.run(
+            DBObject.goods.filter(_.barcode == lift(code))
+          )
+          val goods = DBObject.Goods(code,name, eName, unspsc, brand, _type, width, height, depth, originCountry, originPlace, assemblyCountry, barcodeType, catena, isBasicUnit, packageType, grossWeight, netWeight, description, keyword, pic, price, licenseNum, healthPermitNum, netContent, company, expirationDate,oldGoods.head.insertDate)
           log.debug("数据更新:{}",goods.toString)
           DBConfig.db.run(
             DBObject.goods.filter(_.barcode == lift(code)).update(liftCaseClass(goods))

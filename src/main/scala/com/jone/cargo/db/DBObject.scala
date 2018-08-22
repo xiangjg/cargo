@@ -36,7 +36,7 @@ object DBObject {
     * @param company
     * @param expirationDate
     */
-  case class Goods(barcode: String, name: String, eName: String, unspsc: String, brand: String, _type: String, width: String, height: String, depth: String, originCountry: String, originPlace: String, assemblyCountry: String, barcodeType: String, catena: String, isBasicUnit: String, packageType: String, grossWeight: String, netWeight: String, description: String, keyword: String, pic: String, price: String, licenseNum: String, healthPermitNum: String, netContent: String, company: String, expirationDate: String)
+  case class Goods(barcode: String, name: String, eName: String, unspsc: String, brand: String, _type: String, width: String, height: String, depth: String, originCountry: String, originPlace: String, assemblyCountry: String, barcodeType: String, catena: String, isBasicUnit: String, packageType: String, grossWeight: String, netWeight: String, description: String, keyword: String, pic: String, price: String, licenseNum: String, healthPermitNum: String, netContent: String, company: String, expirationDate: String,insertDate:Date)
 
   val goods = quote {
     querySchema[Goods](
@@ -67,16 +67,18 @@ object DBObject {
       _.healthPermitNum -> "healthpermitnum",
       _.netContent -> "netcontent",
       _.company -> "company",
-      _.expirationDate -> "expirationdate"
+      _.expirationDate -> "expirationdate",
+      _.insertDate -> "insert_date"
     )
   }
 
-  case class GoodsBase(barcode: String)
+  case class GoodsBase(barcode: String,insertDate:Date)
 
   val goodsBase = quote {
     querySchema[GoodsBase](
       "cargo.goods",
-      _.barcode -> "barcode"
+      _.barcode -> "barcode",
+      _.insertDate -> "insert_date"
     )
   }
 

@@ -15,7 +15,7 @@ object MainTask {
 
     val startTasks = PropertiesScalaUtils.getTasks
     if (startTasks.contains("goodsActor"))
-      system.scheduler.schedule(0 milliseconds, 1 minute, goodsActor, "")
+      system.scheduler.schedule(0 milliseconds, 30 second, goodsActor, "")
   }
 
   def main(args: Array[String]): Unit = {
